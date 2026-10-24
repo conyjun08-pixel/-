@@ -133,6 +133,289 @@
       rel="noopener noreferrer"
     >
       내 깃허브 ↗
+      <!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>나의 목표 | 만다라트</title>
+  <style>
+    :root {
+      --page-bg: #f3f6fc;
+      --text: #26344a;
+      --muted: #718096;
+      --border: #dce5f2;
+      --accent: #5879df;
+    }
+
+    * { box-sizing: border-box; }
+
+    body {
+      margin: 0;
+      padding: 24px 14px 40px;
+      background: var(--page-bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Malgun Gothic",
+                   "Apple SD Gothic Neo", sans-serif;
+    }
+
+    .page {
+      width: 100%;
+      max-width: 680px;
+      margin: 0 auto;
+    }
+
+    .dday-card {
+      margin-bottom: 22px;
+      padding: 24px 18px;
+      border-radius: 22px;
+      color: #fff;
+      text-align: center;
+      background: linear-gradient(135deg, #5879df, #7d8fe9);
+      box-shadow: 0 10px 24px rgba(75, 100, 190, 0.18);
+    }
+
+    .dday-label {
+      margin: 0 0 5px;
+      font-size: 14px;
+      opacity: 0.92;
+    }
+
+    .dday-number {
+      margin: 0;
+      font-size: clamp(42px, 12vw, 66px);
+      line-height: 1.12;
+      font-weight: 800;
+      letter-spacing: -1.5px;
+    }
+
+    .dday-caption {
+      margin: 9px 0 0;
+      font-size: 14px;
+      opacity: 0.95;
+    }
+
+    .mandala {
+      padding: 22px;
+      background: #fff;
+      border: 1px solid #e8edf6;
+      border-radius: 22px;
+      box-shadow: 0 8px 24px rgba(40, 60, 100, 0.06);
+    }
+
+    .mandala h1 {
+      text-align: center;
+      font-size: clamp(24px, 6vw, 30px);
+      margin: 0 0 8px;
+    }
+
+    .guide {
+      text-align: center;
+      color: var(--muted);
+      font-size: 14px;
+      margin: 0 0 20px;
+    }
+
+    .mandala-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+      width: 100%;
+    }
+
+    .mandala-cell {
+      aspect-ratio: 1 / 1;
+      min-width: 0;
+      padding: 7px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      overflow-wrap: anywhere;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      border: 1px solid var(--border);
+      border-radius: 13px;
+      background: #f9fbff;
+      color: #34445e;
+      font-size: clamp(11px, 2.8vw, 16px);
+      line-height: 1.45;
+      cursor: text;
+      transition: border-color 0.2s, background 0.2s;
+    }
+
+    .mandala-cell:focus {
+      outline: 2px solid #7299f5;
+      outline-offset: -2px;
+      background: #eef3ff;
+    }
+
+    .mandala-cell.main-goal {
+      background: var(--accent);
+      color: white;
+      border: 2px solid #4565cb;
+      font-size: clamp(14px, 3.6vw, 21px);
+      font-weight: 800;
+    }
+
+    .mandala-cell.main-goal:focus {
+      background: #4969ce;
+    }
+
+    .actions {
+      display: flex;
+      justify-content: center;
+      margin-top: 16px;
+    }
+
+    .reset-button {
+      padding: 10px 15px;
+      border: 1px solid #d5deed;
+      border-radius: 10px;
+      background: #fff;
+      color: #53647d;
+      font-size: 13px;
+      cursor: pointer;
+    }
+
+    .reset-button:hover { background: #edf2fc; }
+
+    .save-note {
+      text-align: center;
+      color: #8793a8;
+      font-size: 12px;
+      margin: 12px 0 0;
+    }
+
+    @media (max-width: 420px) {
+      body { padding: 14px 10px 28px; }
+      .mandala { padding: 14px; border-radius: 17px; }
+      .dday-card { padding: 21px 12px; border-radius: 17px; }
+      .mandala-grid { gap: 5px; }
+      .mandala-cell { padding: 4px; border-radius: 9px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="page">
+    <section class="dday-card" aria-label="목표일까지 남은 날짜">
+      <p class="dday-label">수능까지</p>
+      <p class="dday-number" id="ddayNumber">D-?</p>
+      <p class="dday-caption" id="ddayCaption">2027년 11월 18일 · 목표를 향해 한 걸음씩</p>
+    </section>
+
+    <section class="mandala">
+      <h1>나의 목표</h1>
+      <p class="guide">칸을 눌러서 고칠 수 있어요</p>
+
+      <div class="mandala-grid" id="mandalaGrid">
+        <div class="mandala-cell" contenteditable="true" spellcheck="false" data-key="0">방송 관련 책 읽기</div>
+        <div class="mandala-cell" contenteditable="true" spellcheck="false" data-key="1">수학 오답노트</div>
+        <div class="mandala-cell" contenteditable="true" spellcheck="false" data-key="2">영어 듣기 주 1회</div>
+        <div class="mandala-cell" contenteditable="true" spellcheck="false" data-key="3">운동 주 2회</div>
+        <div class="mandala-cell main-goal" contenteditable="true" spellcheck="false" data-key="4">신문방송학과</div>
+        <div class="mandala-cell" contenteditable="true" spellcheck="false" data-key="5">동아리 발표</div>
+        <div class="mandala-cell" contenteditable="true" spellcheck="false" data-key="6">7시간 수면</div>
+        <div class="mandala-cell" contenteditable="true" spellcheck="false" data-key="7">수능 공부</div>
+        <div class="mandala-cell" contenteditable="true" spellcheck="false" data-key="8">국어 문법 공부</div>
+      </div>
+
+      <div class="actions">
+        <button class="reset-button" id="resetButton" type="button">처음 목표로 되돌리기</button>
+      </div>
+      <p class="save-note" id="saveNote">수정한 내용은 이 브라우저에 자동 저장돼요.</p>
+    </section>
+  </main>
+
+  <script>
+    (() => {
+      const storageKey = "myMandalaGoals_v1";
+      const grid = document.getElementById("mandalaGrid");
+      const cells = Array.from(grid.querySelectorAll(".mandala-cell"));
+      const saveNote = document.getElementById("saveNote");
+
+      const defaults = [
+        "방송 관련 책 읽기",
+        "수학 오답노트",
+        "영어 듣기 주 1회",
+        "운동 주 2회",
+        "신문방송학과",
+        "동아리 발표",
+        "7시간 수면",
+        "수능 공부",
+        "국어 문법 공부"
+      ];
+
+      function saveGoals() {
+        try {
+          localStorage.setItem(
+            storageKey,
+            JSON.stringify(cells.map(cell => cell.innerText.trim()))
+          );
+          saveNote.textContent = "저장됨 · 수정한 내용은 자동 저장돼요.";
+        } catch (error) {
+          saveNote.textContent = "자동 저장을 사용할 수 없어요. 브라우저 설정을 확인해 주세요.";
+        }
+      }
+
+      function loadGoals() {
+        try {
+          const saved = localStorage.getItem(storageKey);
+          if (!saved) return;
+          const goals = JSON.parse(saved);
+          if (!Array.isArray(goals)) return;
+          cells.forEach((cell, i) => {
+            if (typeof goals[i] === "string") cell.textContent = goals[i];
+          });
+        } catch (error) {
+          console.warn("저장된 목표를 불러오지 못했습니다.", error);
+        }
+      }
+
+      loadGoals();
+
+      cells.forEach(cell => {
+        cell.addEventListener("input", saveGoals);
+        cell.addEventListener("keydown", event => {
+          if (event.key === "Enter") {
+            event.preventDefault();
+            cell.blur();
+          }
+        });
+      });
+
+      document.getElementById("resetButton").addEventListener("click", () => {
+        if (!confirm("수정한 목표를 지우고 처음 상태로 되돌릴까요?")) return;
+        cells.forEach((cell, i) => cell.textContent = defaults[i]);
+        saveGoals();
+      });
+
+      // D-Day는 날짜의 시각 차이가 아니라 날짜 기준으로 계산합니다.
+      function updateDday() {
+        const target = new Date(2027, 10, 18); // 월은 0부터 시작하므로 10 = 11월
+        const now = new Date();
+        const today = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+        const days = Math.round((target - today) / 86400000);
+        const number = document.getElementById("ddayNumber");
+        const caption = document.getElementById("ddayCaption");
+
+        if (days > 0) {
+          number.textContent = "D-" + days;
+          caption.textContent = "2027년 11월 18일 · 목표를 향해 한 걸음씩";
+        } else if (days === 0) {
+          number.textContent = "D-Day";
+          caption.textContent = "오늘은 목표 날짜예요!";
+        } else {
+          number.textContent = "D+" + Math.abs(days);
+          caption.textContent = "2027년 11월 18일부터 " + Math.abs(days) + "일 지났어요.";
+        }
+      }
+
+      updateDday();
+    })();
+  </script>
+</body>
+</html>
     </a>
   </main>
 </body>
