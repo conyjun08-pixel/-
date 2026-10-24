@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#eaf4ff">
+  <title>이준서 | 영상과 목표</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0; min-height: 100vh; padding: 24px 14px;
+      display: flex; flex-direction: column; align-items: center; gap: 18px;
+      font-family: "Apple SD Gothic Neo", "Malgun Gothic", sans-serif;
+      background: radial-gradient(circle at top left, #d9efff 0, transparent 42%),
+                  linear-gradient(135deg, #eef6ff, #f6f3ff);
+      color: #172033; overflow-x: hidden;
+    }
+    .card {
+      width: 100%; max-width: 430px; padding: 28px 22px 22px;
+      background: rgba(255,255,255,.97); border: 1px solid rgba(255,255,255,.9);
+      border-radius: 26px; text-align: center;
+      box-shadow: 0 18px 50px rgba(47,76,130,.13);
+    }
+    .emoji {
+      width: 92px; height: 92px; margin: 0 auto 14px;
+      display: flex; justify-content: center; align-items: center;
+      border-radius: 27px; background: linear-gradient(135deg,#dff4ff,#e8e5ff);
+      font-size: 55px;
+    }
+    .eyebrow { margin: 0 0 8px; color: #6476a2; font-size: 10px; font-weight: 800; letter-spacing: 2px; }
+    h1 { margin: 0 0 10px; font-size: 30px; font-weight: 850; letter-spacing: -1px; }
+    .intro { margin: 0; color: #657087; font-size: 14px; line-height: 1.8; word-break: keep-all; }
+    .divider { height: 1px; margin: 22px 0; background: #edf0f6; }
+    .section-title { margin: 0 0 12px; text-align: left; font-size: 14px; font-weight: 800; color: #34415c; }
+    .tags { display: flex; justify-content: flex-start; flex-wrap: wrap; gap: 8px; }
+    .tag { padding: 9px 12px; border-radius: 999px; background: #edf5ff; color: #315d9d; font-size: 12px; font-weight: 700; }
+    .video-panel { margin-top: 22px; padding: 15px; border-radius: 18px; background: #f7f8fc; text-align: left; }
+    .video-heading { display: flex; align-items: center; gap: 9px; margin-bottom: 12px; }
+    .video-icon { width: 34px; height: 34px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; border-radius: 11px; background: #e5e9ff; font-size: 18px; }
+    .video-heading strong { display: block; font-size: 13px; }
+    .video-heading small { display: block; margin-top: 3px; color: #818ba1; font-size: 10px; }
+    .video-list { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+    .video-item { min-width: 0; padding: 10px; border: 1px solid #e9edf5; border-radius: 12px; background: #fff; }
+    .video-item span { display: block; margin-bottom: 5px; font-size: 17px; }
+    .video-item strong { display: block; font-size: 12px; }
+    .video-item small { display: block; margin-top: 4px; color: #7b8498; font-size: 10px; line-height: 1.5; word-break: keep-all; }
+    .github-button {
+      display: block; width: 100%; margin-top: 22px; padding: 14px 20px;
+      border-radius: 14px; background: #222b3c; color: #fff; text-decoration: none;
+      font-size: 15px; font-weight: 750; transition: background-color .2s, transform .2s;
+    }
+    .github-button:hover { background: #3a4964; transform: translateY(-2px); }
+    .github-button:focus-visible { outline: 3px solid #9bbcff; outline-offset: 4px; }
+
+    .dday-card { background: linear-gradient(145deg, #26395f, #536bb1); color: white; }
+    .dday-card .eyebrow { color: #d4defe; }
+    .dday-label { margin: 6px 0 0; color: #e7edff; font-size: 14px; }
+    .dday-number { margin: 8px 0 5px; font-size: clamp(42px, 12vw, 58px); font-weight: 850; letter-spacing: -2px; }
+    .dday-date { margin: 0; color: #d4defe; font-size: 12px; }
+    .dday-note { margin: 14px 0 0; color: #e7edff; font-size: 11px; }
+
+    .mandala-card { text-align: left; }
+    .mandala-card h2 { margin: 0; font-size: 20px; letter-spacing: -.5px; }
+    .mandala-subtitle { margin: 7px 0 16px; color: #788399; font-size: 12px; line-height: 1.6; }
+    .mandala-grid {
+      display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 7px;
+      width: 100%;
+    }
+    .mandala-cell {
+      display: flex; align-items: center; justify-content: center;
+      min-width: 0; min-height: 94px; padding: 8px 5px;
+      border: 1px solid #dfe8f7; border-radius: 13px;
+      background: #f5f8ff; color: #34415c; text-align: center;
+      font-size: 12px; line-height: 1.5; overflow-wrap: anywhere;
+      cursor: text; outline: none; transition: border-color .15s, background .15s;
+    }
+    .mandala-cell:focus { border-color: #7197ef; background: #eef4ff; box-shadow: 0 0 0 2px #dce8ff; }
+    .mandala-cell.center { background: #dce8ff; border-color: #9db8f5; color: #234d9b; font-weight: 800; }
+    .mandala-cell.center:focus { background: #d3e2ff; }
+    .edit-hint { margin: 12px 0 0; color: #8a94a8; font-size: 11px; line-height: 1.6; }
+    .reset-button {
+      margin-top: 12px; padding: 8px 12px; border: 1px solid #dfe5ef; border-radius: 10px;
+      background: #fff; color: #5c6880; font: inherit; font-size: 11px; cursor: pointer;
+    }
+    .reset-button:hover { background: #f5f8ff; }
+    .footer { margin: 15px 0 0; color: #9aa2b2; font-size: 10px; letter-spacing: 1px; text-align: center; }
+    @media (max-width: 360px) {
+      body { padding: 16px 10px; }
+      .card { padding: 23px 15px 19px; }
+      .mandala-grid { gap: 5px; }
+      .mandala-cell { min-height: 86px; padding: 6px 3px; font-size: 11px; }
+      .tag { font-size: 11px; }
+    }
+  </style>
+</head>
+<body>
+  <main class="card">
+    <div class="emoji" aria-label="파도">🌊</div>
+    <p class="eyebrow">MY INTRODUCTION</p>
+    <h1>이준서</h1>
+    <p class="intro">피아노와 영상 촬영을 좋아하는<br>고등학교 2학년입니다.</p>
+
+    <div class="divider"></div>
+
+    <section aria-labelledby="favorites-title">
+      <h2 class="section-title" id="favorites-title">좋아하는 것</h2>
+      <div class="tags">
+        <span class="tag">🎹 피아노</span>
+        <span class="tag">🎥 영상 촬영</span>
+        <span class="tag">🎬 영상 편집</span>
+        <span class="tag">🎵 음악</span>
+      </div>
+    </section>
+
+    <section class="video-panel" aria-labelledby="video-title">
+      <div class="video-heading">
+        <div class="video-icon" aria-hidden="true">🎞️</div>
+        <div>
+          <strong id="video-title">VIDEO PLAYGROUND</strong>
+          <small>내가 관심 있는 영상의 세계</small>
+        </div>
+      </div>
+      <div class="video-list">
+        <div class="video-item"><span aria-hidden="true">📹</span><strong>촬영</strong><small>장면과 순간을 담기</small></div>
+        <div class="video-item"><span aria-hidden="true">✂️</span><strong>편집</strong><small>컷을 연결해 이야기 만들기</small></div>
+        <div class="video-item"><span aria-hidden="true">💡</span><strong>기획</strong><small>영상 아이디어 떠올리기</small></div>
+        <div class="video-item"><span aria-hidden="true">🎨</span><strong>색감과 구도</strong><small>영상의 분위기 표현하기</small></div>
+      </div>
+    </section>
+
+    <a class="github-button" href="https://github.com/your-username" target="_blank" rel="noopener noreferrer">내 깃허브 ↗</a>
+    <p class="footer">CAPTURE A MOMENT, TELL A STORY</p>
+  </main>
+
+  <section class="card dday-card" aria-labelledby="dday-title">
+    <p class="eyebrow">COUNTDOWN</p>
+    <h2 id="dday-title" style="margin:0;font-size:19px;">수능까지</h2>
+    <p class="dday-label">목표를 향해 하루씩</p>
+    <div class="dday-number" id="dday-number">D-</div>
+    <p class="dday-date">2027년 11월 18일</p>
+    <p class="dday-note">남은 시간을 계획적으로 활용해 보자!</p>
+  </section>
+
+  <section class="card mandala-card" aria-labelledby="mandala-title">
+    <h2 id="mandala-title">🎯 나의 만다라트</h2>
+    <p class="mandala-subtitle">가운데 목표를 이루기 위한 작은 실천들. 칸을 눌러 내용을 수정할 수 있어.</p>
+    <div class="mandala-grid" id="mandala-grid" aria-label="3 곱하기 3 만다라트 목표판">
+      <div class="mandala-cell" contenteditable="true" role="textbox" aria-label="세부 목표 1">방송 관련<br>책 읽기</div>
+      <div class="mandala-cell" contenteditable="true" role="textbox" aria-label="세부 목표 2">수학<br>오답노트</div>
+      <div class="mandala-cell" contenteditable="true" role="textbox" aria-label="세부 목표 3">영어 듣기<br>주 1회</div>
+      <div class="mandala-cell" contenteditable="true" role="textbox" aria-label="세부 목표 4">운동<br>주 2회</div>
+      <div class="mandala-cell center" contenteditable="true" role="textbox" aria-label="중심 목표">신문방송학과</div>
+      <div class="mandala-cell" contenteditable="true" role="textbox" aria-label="세부 목표 5">동아리 발표</div>
+      <div class="mandala-cell" contenteditable="true" role="textbox" aria-label="세부 목표 6">7시간 수면</div>
+      <div class="mandala-cell" contenteditable="true" role="textbox" aria-label="세부 목표 7">수능 공부</div>
+      <div class="mandala-cell" contenteditable="true" role="textbox" aria-label="세부 목표 8">국어 문법 공부</div>
+    </div>
+    <p class="edit-hint">✏️ 칸을 클릭하거나 탭해서 수정하면 자동 저장돼. 새로고침해도 수정한 내용이 유지돼.</p>
+    <button class="reset-button" id="reset-mandala" type="button">기본 목표로 되돌리기</button>
+    <p class="footer">SMALL STEPS, BIG GOALS</p>
+  </section>
+
+  <script>
+    // 수능 디데이: 2027년 11월 18일
+    function updateDday() {
+      const target = new Date(2027, 10, 18);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      const days = Math.ceil((target.getTime() - today.getTime()) / 86400000);
+      const output = document.getElementById("dday-number");
+
+      if (days > 0) output.textContent = "D-" + days;
+      else if (days === 0) output.textContent = "D-DAY";
+      else output.textContent = "D+" + Math.abs(days);
+    }
+    updateDday();
+
+    // 만다라트 내용은 이 브라우저에 자동 저장
+    const grid = document.getElementById("mandala-grid");
+    const cells = Array.from(grid.querySelectorAll(".mandala-cell"));
+    const storageKey = "junseo-mandalart-v1";
+    const defaultGoals = [
+      "방송 관련\\n책 읽기", "수학\\n오답노트", "영어 듣기\\n주 1회",
+      "운동\\n주 2회", "신문방송학과", "동아리 발표",
+      "7시간 수면", "수능 공부", "국어 문법 공부"
+    ];
+
+    function displayText(value) {
+      return value.replace(/\\n/g, "<br>");
+    }
+
+    try {
+      const saved = localStorage.getItem(storageKey);
+      if (saved) {
+        const goals = JSON.parse(saved);
+        if (Array.isArray(goals) && goals.length === cells.length) {
+          cells.forEach((cell, index) => {
+            cell.innerHTML = displayText(String(goals[index]));
+          });
+        }
+      }
+    } catch (error) {
+      // 브라우저에서 저장 기능을 사용할 수 없어도 편집은 가능
+    }
+
+    cells.forEach((cell) => {
+      cell.addEventListener("input", () => {
+        const goals = cells.map(item => item.innerText.trim());
+        try { localStorage.setItem(storageKey, JSON.stringify(goals)); } catch (error) {}
+      });
+
+      cell.addEventListener("keydown", (event) => {
+        if (event.key === "Enter") {
+          event.preventDefault();
+          document.execCommand("insertLineBreak");
+        }
+      });
+    });
+
+    document.getElementById("reset-mandala").addEventListener("click", () => {
+      cells.forEach((cell, index) => {
+        cell.innerHTML = displayText(defaultGoals[index]);
+      });
+      try { localStorage.removeItem(storageKey); } catch (error) {}
+    });
+  </script>
+</body>
+</html>
