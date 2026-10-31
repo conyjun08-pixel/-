@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="theme-color" content="#f5f7fb">
+  <title>나의 공간</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans KR", sans-serif;
+      color: #202638;
+      background: linear-gradient(135deg, #f5f7fb 0%, #eaf0fb 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 32px 18px;
+    }
+    .container { width: 100%; max-width: 900px; }
+    .intro { text-align: center; margin-bottom: 38px; }
+    .eyebrow {
+      display: inline-block;
+      padding: 7px 13px;
+      border-radius: 999px;
+      background: #e2eaff;
+      color: #4566ad;
+      font-size: 13px;
+      font-weight: 700;
+      letter-spacing: .04em;
+      margin-bottom: 15px;
+    }
+    h1 { margin: 0; font-size: clamp(32px, 6vw, 48px); letter-spacing: -1.8px; }
+    .intro p { margin: 13px 0 0; color: #697287; font-size: 16px; line-height: 1.7; }
+    .cards {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 20px;
+    }
+    .card {
+      display: block;
+      min-height: 255px;
+      padding: 30px;
+      border: 1px solid rgba(220, 226, 238, .9);
+      border-radius: 24px;
+      background: rgba(255, 255, 255, .92);
+      color: inherit;
+      text-decoration: none;
+      box-shadow: 0 12px 35px rgba(43, 61, 100, .07);
+      transition: transform .2s ease, box-shadow .2s ease, border-color .2s ease;
+    }
+    .card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 18px 42px rgba(43, 61, 100, .12);
+      border-color: #b9c9ee;
+    }
+    .icon {
+      width: 58px; height: 58px;
+      display: grid; place-items: center;
+      border-radius: 18px;
+      font-size: 29px;
+      margin-bottom: 23px;
+    }
+    .goal .icon { background: #e9efff; }
+    .game .icon { background: #e5f7f1; }
+    .card h2 { margin: 0 0 10px; font-size: 23px; letter-spacing: -.6px; }
+    .card p { margin: 0; color: #737d91; line-height: 1.65; font-size: 14px; }
+    .link {
+      display: inline-flex; align-items: center; gap: 8px;
+      margin-top: 24px; font-size: 14px; font-weight: 700;
+      color: #526fb3;
+    }
+    .game .link { color: #26866a; }
+    footer { text-align: center; margin-top: 34px; color: #9aa2b1; font-size: 12px; }
+    @media (max-width: 620px) {
+      body { align-items: flex-start; padding-top: 58px; }
+      .intro { margin-bottom: 28px; }
+      .intro p { font-size: 14px; }
+      .cards { grid-template-columns: 1fr; gap: 14px; }
+      .card { min-height: 220px; padding: 25px; }
+      .icon { margin-bottom: 17px; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      *, *::before, *::after { transition: none !important; }
+    }
+  </style>
+</head>
+<body>
+  <main class="container">
+    <header class="intro">
+      <span class="eyebrow">MY SPACE</span>
+      <h1>나의 공간에 오신 걸 환영합니다</h1>
+      <p>목표를 관리하고, 직접 만든 게임을 즐겨보세요.</p>
+    </header>
+
+    <section class="cards" aria-label="페이지 바로가기">
+      <a class="card goal" href="./goal/index.html">
+        <div class="icon" aria-hidden="true">🎯</div>
+        <h2>나의 만다라트</h2>
+        <p>목표와 실천 계획을 한눈에 확인하고<br>나만의 방식으로 관리해 보세요.</p>
+        <span class="link">만다라트 열기 <span aria-hidden="true">→</span></span>
+      </a>
+
+      <a class="card game" href="./game/index.html">
+        <div class="icon" aria-hidden="true">🎮</div>
+        <h2>나의 게임</h2>
+        <p>직접 만든 게임들을 모아두었어요.<br>원하는 게임을 선택해 플레이해 보세요.</p>
+        <span class="link">게임 목록 보기 <span aria-hidden="true">→</span></span>
+      </a>
+    </section>
+
+    <footer>© 2026 MY SPACE</footer>
+  </main>
+</body>
+</html>
