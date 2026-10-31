@@ -1,1 +1,245 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>나의 게임 아케이드</title>
 
+  <style>
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      min-height: 100vh;
+      font-family: "Pretendard", "Noto Sans KR", sans-serif;
+      background: linear-gradient(135deg, #10182d, #182b4a);
+      color: white;
+      padding: 40px 20px;
+    }
+
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+
+    header {
+      text-align: center;
+      margin-bottom: 55px;
+    }
+
+    .logo {
+      display: inline-block;
+      padding: 9px 18px;
+      border: 1px solid #526b94;
+      border-radius: 30px;
+      color: #a9c7ff;
+      font-size: 13px;
+      letter-spacing: 2px;
+      margin-bottom: 20px;
+    }
+
+    h1 {
+      font-size: clamp(32px, 6vw, 52px);
+      margin: 0 0 15px;
+      letter-spacing: -2px;
+    }
+
+    .subtitle {
+      color: #aab9d1;
+      font-size: 16px;
+      line-height: 1.7;
+    }
+
+    .section-title {
+      font-size: 23px;
+      margin-bottom: 22px;
+    }
+
+    .game-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+
+    .game-card {
+      background: rgba(255, 255, 255, 0.07);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      border-radius: 22px;
+      padding: 25px;
+      transition: 0.25s;
+      display: flex;
+      flex-direction: column;
+      min-height: 280px;
+    }
+
+    .game-card:hover {
+      transform: translateY(-7px);
+      background: rgba(255, 255, 255, 0.12);
+      border-color: #76a9ff;
+    }
+
+    .game-icon {
+      width: 65px;
+      height: 65px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(105, 156, 255, 0.15);
+      border-radius: 18px;
+      font-size: 34px;
+      margin-bottom: 20px;
+    }
+
+    .game-card h3 {
+      font-size: 21px;
+      margin: 0 0 10px;
+    }
+
+    .game-card p {
+      color: #aab9d1;
+      font-size: 14px;
+      line-height: 1.6;
+      margin: 0 0 25px;
+      flex-grow: 1;
+    }
+
+    .play-button {
+      display: block;
+      text-align: center;
+      text-decoration: none;
+      background: #477ff0;
+      color: white;
+      padding: 13px;
+      border-radius: 12px;
+      font-weight: bold;
+      transition: 0.2s;
+    }
+
+    .play-button:hover {
+      background: #6696ff;
+    }
+
+    .game-count {
+      color: #9fb4d5;
+      font-size: 14px;
+      margin-top: 25px;
+      text-align: right;
+    }
+
+    footer {
+      text-align: center;
+      color: #7185a5;
+      font-size: 13px;
+      margin-top: 65px;
+      line-height: 1.8;
+    }
+
+    @media (max-width: 750px) {
+      .game-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    @media (max-width: 500px) {
+      body {
+        padding: 30px 16px;
+      }
+
+      .game-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .game-card {
+        min-height: 250px;
+      }
+
+      header {
+        margin-bottom: 40px;
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div class="container">
+
+    <header>
+      <div class="logo">JUNSEO'S MINI ARCADE</div>
+      <h1>나의 게임 아케이드 🎮</h1>
+      <p class="subtitle">
+        직접 만든 게임들을 한곳에서 즐겨보세요!<br>
+        앞으로 더 많은 게임이 추가될 예정입니다.
+      </p>
+    </header>
+
+    <main>
+      <h2 class="section-title">🎯 게임 목록</h2>
+
+      <div class="game-grid" id="gameGrid">
+        <!-- 게임 카드가 여기에 자동으로 추가됩니다. -->
+      </div>
+
+      <div class="game-count" id="gameCount"></div>
+    </main>
+
+    <footer>
+      <p>MADE BY JUNSEO</p>
+      <p>나만의 작은 게임 아케이드</p>
+    </footer>
+
+  </div>
+
+  <script>
+    // =====================================
+    // 새로운 게임을 추가하려면 아래 목록에 작성하세요!
+    // =====================================
+
+    const games = [
+      {
+        title: "두더지 잡기",
+        description: "빠르게 나타나는 두더지를 잡아 최고 점수에 도전하세요!",
+        icon: "🐹",
+        file: "두더지잡기.html"
+      },
+      {
+        title: "짝 맞추기",
+        description: "카드를 뒤집어 같은 그림을 찾아보세요!",
+        icon: "🃏",
+        file: "짝맞추기.html"
+      },
+      {
+        title: "운석 피하기",
+        description: "우주선을 움직여 떨어지는 운석을 피하세요!",
+        icon: "🚀",
+        file: "운석피하기.html"
+      }
+    ];
+
+    // 게임 카드 화면에 표시하기
+    const gameGrid = document.getElementById("gameGrid");
+
+    games.forEach((game) => {
+      const card = document.createElement("div");
+      card.className = "game-card";
+
+      card.innerHTML = `
+        <div class="game-icon">${game.icon}</div>
+        <h3>${game.title}</h3>
+        <p>${game.description}</p>
+        <a class="play-button" href="${game.file}">
+          게임 시작하기 →
+        </a>
+      `;
+
+      gameGrid.appendChild(card);
+    });
+
+    // 전체 게임 개수 표시
+    document.getElementById("gameCount").textContent =
+      `현재 등록된 게임 ${games.length}개`;
+  </script>
+
+</body>
+</html>
