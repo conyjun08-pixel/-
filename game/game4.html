@@ -1,0 +1,441 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>컬러 포토 챌린지</title>
+<style>
+* { box-sizing: border-box; }
+body {
+  margin: 0; min-height: 100vh; background: #101827; color: #f8fafc;
+  font-family: system-ui, "Malgun Gothic", sans-serif;
+  display: flex; justify-content: center; align-items: center; padding: 16px;
+}
+.game { width: min(100%, 900px); }
+header { display:flex; justify-content:space-between; align-items:center; gap:12px; margin-bottom:12px; }
+h1 { font-size: clamp(20px, 4vw, 28px); margin:0; }
+.stage { background:#263449; border:1px solid #43536b; padding:9px 14px; border-radius:999px; font-weight:800; }
+.info { display:flex; flex-wrap:wrap; gap:8px; margin-bottom:10px; }
+.pill { background:#1e293b; border:1px solid #334155; padding:8px 12px; border-radius:12px; font-size:14px; }
+.legend { display:flex; gap:12px; flex-wrap:wrap; margin:0 0 10px; color:#cbd5e1; font-size:13px; }
+.dot { display:inline-block; width:10px; height:10px; border-radius:50%; margin-right:5px; }
+.arena-wrap { border:2px solid #52627a; border-radius:18px; overflow:hidden; background:#dce7ed; }
+canvas { display:block; width:100%; height:auto; aspect-ratio:16/10; touch-action:none; cursor:crosshair; }
+.message { min-height:28px; text-align:center; margin:12px 0 8px; font-weight:700; color:#fde68a; }
+.controls { display:flex; gap:10px; justify-content:center; flex-wrap:wrap; }
+button { border:0; border-radius:12px; padding:12px 20px; font-size:15px; font-weight:800; cursor:pointer; color:#102033; background:#facc15; }
+button.secondary { color:#e2e8f0; background:#334155; }
+.help { text-align:center; color:#94a3b8; font-size:12px; margin-top:12px; line-height:1.6; }
+@media(max-width:520px) {
+  body { padding:10px; align-items:flex-start; }
+  .pill { font-size:12px; padding:7px 9px; }
+}
+</style>
+</head>
+<body>
+<main class="game">
+  <header>
+    <h1>📸 컬러 포토 챌린지</h1>
+    <div class="stage" id="stage">STAGE 1 / 3</div>
+  </header>
+
+  <section class="info">
+    <div class="pill">목표: <b>빨강 · 파랑 · 노랑</b> 정확히 한 명씩</div>
+    <div class="pill">촬영 범위: <b>네모 안</b></div>
+    <div class="pill">남은 촬영: <b id="shots">무제한</b></div>
+  </section>
+
+  <div class="legend">
+    <span><i class="dot" style="background:#ef4444"></i>빨강</span>
+    <span><i class="dot" style="background:#3b82f6"></i>파랑</span>
+    <span><i class="dot" style="background:#facc15"></i>노랑</span>
+    <span>총 18명 (색깔마다 6명)</span>
+  </div>
+
+  <div class="arena-wrap">
+    <canvas id="game" width="720" height="450"></canvas>
+  </div>
+
+  <div class="message" id="message">
+    네모 안에 세 가지 색이 모두 들어오도록 맞춘 뒤 촬영하세요!
+  </div>
+
+  <div class="controls">
+    <button id="restart" class="secondary">처음부터 다시</button>
+    <button id="shoot">📸 촬영하기</button>
+  </div>
+
+  <div class="help">
+    PC: 마우스를 움직이고 좌클릭 또는 촬영하기 버튼을 누르세요.<br>
+    휴대폰: 화면을 터치해 조준하고, 촬영하기 버튼을 누르세요.
+  </div>
+</main>
+
+<script>
+(() => {
+  const canvas = document.getElementById('game');
+  const ctx = canvas.getContext('2d');
+  const stageEl = document.getElementById('stage');
+  const messageEl = document.getElementById('message');
+
+  const colors = [
+    {name:'빨강', fill:'#ef4444'},
+    {name:'파랑', fill:'#3b82f6'},
+    {name:'노랑', fill:'#facc15'}
+  ];
+
+  const W = canvas.width;
+  const H = canvas.height;
+  const boxSize = 125;
+
+  let people = [];
+  let stage = 1;
+  let running = true;
+  let won = false;
+  let shotsLeft = Infinity;
+
+  let pointer = {x:W/2, y:H/2, active:false};
+  let lastTime = 0;
+
+  function makePeople() {
+    people = [];
+
+    // 색깔마다 6명씩, 총 18명
+    const roster = [
+      ...Array(6).fill(0),
+      ...Array(6).fill(1),
+      ...Array(6).fill(2)
+    ];
+
+    // 사람들의 순서를 무작위로 섞기
+    for (let i = roster.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [roster[i], roster[j]] = [roster[j], roster[i]];
+    }
+
+    roster.forEach(color => {
+      const angle = Math.random() * Math.PI * 2;
+      const speed = (55 + Math.random() * 45) *
+                    (1 + (stage-1)*0.65);
+
+      people.push({
+        x:55 + Math.random()*(W-110),
+        y:75 + Math.random()*(H-130),
+        vx:Math.cos(angle)*speed,
+        vy:Math.sin(angle)*speed,
+        color,
+        size:13 + Math.random()*3,
+        phase:Math.random()*Math.PI*2
+      });
+    });
+  }
+
+  function setStage(n) {
+    stage = n;
+    stageEl.textContent = `STAGE ${stage} / 3`;
+
+    // 3단계만 촬영 5회 제한
+    shotsLeft = stage === 3 ? 5 : Infinity;
+
+    document.getElementById('shots').textContent =
+      Number.isFinite(shotsLeft) ? shotsLeft + '회' : '무제한';
+
+    running = true;
+    won = false;
+    makePeople();
+
+    messageEl.textContent = stage === 1
+      ? '네모 안에 세 가지 색이 모두 들어오도록 맞춘 뒤 촬영하세요!'
+      : `STAGE ${stage}! 사람들이 더 빨라졌어요. 집중해서 촬영하세요!`;
+  }
+
+  function positionFromEvent(e) {
+    const r = canvas.getBoundingClientRect();
+
+    pointer.x = Math.max(0, Math.min(W,
+      (e.clientX-r.left) * W/r.width));
+
+    pointer.y = Math.max(0, Math.min(H,
+      (e.clientY-r.top) * H/r.height));
+
+    pointer.active = true;
+  }
+
+  canvas.addEventListener('pointermove', e => {
+    positionFromEvent(e);
+  });
+
+  canvas.addEventListener('pointerdown', e => {
+    positionFromEvent(e);
+
+    if (e.pointerType === 'mouse' && e.button !== 0) return;
+
+    shoot();
+  });
+
+  document.getElementById('shoot').addEventListener('click', shoot);
+
+  document.getElementById('restart').addEventListener('click', () => {
+    setStage(1);
+  });
+
+  function shoot() {
+    if (!running || won) return;
+
+    // 3단계에서는 촬영할 때마다 횟수 감소
+    if (Number.isFinite(shotsLeft)) {
+      shotsLeft--;
+      document.getElementById('shots').textContent =
+        shotsLeft + '회';
+    }
+
+    const half = boxSize/2;
+
+    // 네모 안에 들어온 사람 확인
+    const inside = people.filter(p =>
+      Math.abs(p.x-pointer.x) <= half &&
+      Math.abs(p.y-pointer.y) <= half
+    );
+
+    // 색깔별 인원수 확인
+    const counts = [0,1,2].map(c =>
+      inside.filter(p => p.color === c).length
+    );
+
+    // 빨강, 파랑, 노랑 각각 정확히 한 명이어야 성공
+    const success = counts.every(count => count === 1);
+
+    if (success) {
+      if (stage < 3) {
+        won = true;
+        running = false;
+
+        messageEl.textContent =
+          `찰칵! 성공! 세 가지 색이 정확히 한 명씩 잡혔어요. ${stage+1}단계로 이동합니다.`;
+
+        setTimeout(() => setStage(stage+1), 1100);
+      } else {
+        won = true;
+        running = false;
+
+        messageEl.textContent =
+          '🎉 완벽한 촬영! 3단계를 모두 클리어했습니다!';
+
+        stageEl.textContent = 'CLEAR!';
+      }
+
+      return;
+    }
+
+    // 실패하면 네모 안에 들어온 사람 전부 제거
+    const removed = inside.length;
+
+    if (removed > 0) {
+      const insideSet = new Set(inside);
+      people = people.filter(p => !insideSet.has(p));
+    }
+
+    // 어떤 색이든 전부 사라지면 게임 오버
+    const emptyColors = [0,1,2].filter(c =>
+      !people.some(p => p.color === c)
+    );
+
+    if (emptyColors.length > 0) {
+      running = false;
+      won = true;
+
+      messageEl.textContent =
+        `게임 오버! ${emptyColors.map(c => colors[c].name).join(' · ')} 색 사람이 모두 사라졌어요. 처음부터 다시 도전하세요.`;
+
+      return;
+    }
+
+    // 3단계 촬영 기회를 모두 사용하면 게임 오버
+    if (Number.isFinite(shotsLeft) && shotsLeft <= 0) {
+      running = false;
+      won = true;
+
+      messageEl.textContent =
+        '게임 오버! 3단계 촬영 기회 5회를 모두 사용했어요.';
+
+      return;
+    }
+
+    if (removed === 0) {
+      messageEl.textContent =
+        '실패! 범위 안에 사람이 없어요. 촬영 기회가 줄었습니다.';
+    } else {
+      messageEl.textContent =
+        `실패! 범위 안의 사람 ${removed}명이 사라졌어요. 색깔별로 정확히 한 명씩 맞춰보세요.`;
+    }
+  }
+
+  function drawPerson(p, time) {
+    const bob = Math.sin(time*0.006 + p.phase)*2;
+
+    ctx.save();
+    ctx.translate(p.x, p.y+bob);
+
+    // 그림자
+    ctx.fillStyle = 'rgba(15,23,42,.16)';
+    ctx.beginPath();
+    ctx.ellipse(0,18,12,4,0,0,Math.PI*2);
+    ctx.fill();
+
+    // 머리
+    ctx.fillStyle = '#f2c9a5';
+    ctx.beginPath();
+    ctx.arc(0,-10,7,0,Math.PI*2);
+    ctx.fill();
+
+    // 몸통
+    ctx.fillStyle = colors[p.color].fill;
+    ctx.beginPath();
+    ctx.roundRect(-8,-2,16,19,5);
+    ctx.fill();
+
+    // 팔과 다리
+    ctx.strokeStyle = '#334155';
+    ctx.lineWidth = 3;
+    ctx.lineCap = 'round';
+
+    ctx.beginPath();
+    ctx.moveTo(-6,3);
+    ctx.lineTo(-12,11);
+    ctx.moveTo(6,3);
+    ctx.lineTo(12,11);
+    ctx.moveTo(-4,16);
+    ctx.lineTo(-7,25);
+    ctx.moveTo(4,16);
+    ctx.lineTo(7,25);
+    ctx.stroke();
+
+    ctx.restore();
+  }
+
+  function draw(time) {
+    ctx.clearRect(0,0,W,H);
+
+    // 배경
+    ctx.fillStyle = '#dce7ed';
+    ctx.fillRect(0,0,W,H);
+
+    ctx.fillStyle = '#c9d9df';
+
+    for (let x=0; x<W; x+=60) {
+      for (let y=0; y<H; y+=60) {
+        ctx.beginPath();
+        ctx.arc(x+((y/60)%2)*20,y,1.5,0,Math.PI*2);
+        ctx.fill();
+      }
+    }
+
+    // 바닥 라인
+    ctx.strokeStyle = 'rgba(71,85,105,.12)';
+    ctx.lineWidth = 2;
+
+    for(let y=40;y<H;y+=70) {
+      ctx.beginPath();
+      ctx.moveTo(0,y);
+      ctx.lineTo(W,y);
+      ctx.stroke();
+    }
+
+    people.forEach(p => drawPerson(p,time));
+
+    // 촬영 범위
+    if (pointer.active) {
+      const s = boxSize;
+      const x = pointer.x-s/2;
+      const y = pointer.y-s/2;
+
+      ctx.fillStyle = 'rgba(15,23,42,.08)';
+      ctx.fillRect(x,y,s,s);
+
+      ctx.strokeStyle = '#111827';
+      ctx.lineWidth = 4;
+      ctx.setLineDash([9,6]);
+      ctx.strokeRect(x,y,s,s);
+      ctx.setLineDash([]);
+
+      // 중앙 조준점
+      ctx.strokeStyle = '#111827';
+      ctx.lineWidth = 2;
+
+      ctx.beginPath();
+      ctx.moveTo(pointer.x-9,pointer.y);
+      ctx.lineTo(pointer.x+9,pointer.y);
+      ctx.moveTo(pointer.x,pointer.y-9);
+      ctx.lineTo(pointer.x,pointer.y+9);
+      ctx.stroke();
+    }
+
+    ctx.fillStyle = 'rgba(15,23,42,.55)';
+    ctx.font = 'bold 17px system-ui';
+    ctx.fillText(`촬영 범위 ${boxSize} × ${boxSize}`,18,H-18);
+  }
+
+  function update(dt) {
+    if (!running) return;
+
+    people.forEach(p => {
+      p.x += p.vx*dt;
+      p.y += p.vy*dt;
+
+      const margin = 25;
+
+      if(p.x<margin) {
+        p.x=margin;
+        p.vx=Math.abs(p.vx);
+      }
+
+      if(p.x>W-margin) {
+        p.x=W-margin;
+        p.vx=-Math.abs(p.vx);
+      }
+
+      if(p.y<45) {
+        p.y=45;
+        p.vy=Math.abs(p.vy);
+      }
+
+      if(p.y>H-35) {
+        p.y=H-35;
+        p.vy=-Math.abs(p.vy);
+      }
+
+      // 무작위 방향 변화
+      p.vx += (Math.random()-.5)*25*dt;
+      p.vy += (Math.random()-.5)*25*dt;
+
+      const max = 110+stage*48;
+      const speed = Math.hypot(p.vx,p.vy);
+
+      if(speed>max) {
+        p.vx=p.vx/speed*max;
+        p.vy=p.vy/speed*max;
+      }
+    });
+  }
+
+  function loop(t) {
+    const dt = Math.min((t-lastTime)/1000 || 0, .035);
+    lastTime = t;
+
+    update(dt);
+    draw(t);
+
+    requestAnimationFrame(loop);
+  }
+
+  pointer.x = W/2;
+  pointer.y = H/2;
+  pointer.active = true;
+
+  setStage(1);
+  requestAnimationFrame(loop);
+})();
+</script>
+</body>
+</html>
