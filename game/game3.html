@@ -1,0 +1,512 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport"
+content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>우주 생존 게임</title>
+
+<style>
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+html, body {
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  background: #050817;
+  font-family: Arial, sans-serif;
+  touch-action: none;
+}
+
+canvas {
+  display: block;
+  width: 100%;
+  height: 100%;
+  touch-action: none;
+}
+
+#ui {
+  position: fixed;
+  top: 15px;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: space-around;
+  color: white;
+  font-size: 17px;
+  font-weight: bold;
+  pointer-events: none;
+  z-index: 2;
+  text-shadow: 0 2px 5px black;
+}
+
+#overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(3, 7, 25, 0.83);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: column;
+  color: white;
+  text-align: center;
+  padding: 25px;
+  z-index: 5;
+}
+
+#overlay h1 {
+  font-size: 35px;
+  margin-bottom: 15px;
+}
+
+#overlay p {
+  font-size: 17px;
+  line-height: 1.8;
+  color: #d0d8ff;
+  margin-bottom: 20px;
+}
+
+button {
+  background: #5968ff;
+  color: white;
+  border: none;
+  border-radius: 30px;
+  padding: 16px 38px;
+  font-size: 19px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+button:active {
+  transform: scale(0.95);
+}
+
+.hidden {
+  display: none !important;
+}
+</style>
+</head>
+
+<body>
+
+<div id="ui">
+  <div>⏱️ <span id="score">0</span>초</div>
+  <div>❤️ <span id="lives">3</span></div>
+  <div>☄️ 우주 생존</div>
+</div>
+
+<canvas id="game"></canvas>
+
+<div id="overlay">
+  <h1 id="title">🚀 우주 생존 게임</h1>
+
+  <p id="description">
+    떨어지는 운석을 피하세요!<br>
+    손가락으로 우주선을 움직이세요.<br>
+    PC에서는 방향키로 조작할 수 있습니다.<br><br>
+    목숨은 총 3개!
+  </p>
+
+  <button id="startBtn">게임 시작</button>
+</div>
+
+<script>
+const canvas = document.getElementById("game");
+const ctx = canvas.getContext("2d");
+
+const scoreText = document.getElementById("score");
+const livesText = document.getElementById("lives");
+
+const overlay = document.getElementById("overlay");
+const title = document.getElementById("title");
+const description = document.getElementById("description");
+const startBtn = document.getElementById("startBtn");
+
+// 화면 크기
+let W, H;
+
+function resize() {
+  const dpr = Math.min(window.devicePixelRatio || 1, 2);
+
+  W = window.innerWidth;
+  H = window.innerHeight;
+
+  canvas.width = W * dpr;
+  canvas.height = H * dpr;
+
+  ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+}
+
+window.addEventListener("resize", resize);
+resize();
+
+// 게임 변수
+let ship;
+let meteors = [];
+let stars = [];
+
+let score = 0;
+let lives = 3;
+
+let running = false;
+let gameOver = false;
+
+let startTime = 0;
+let lastTime = 0;
+let spawnTimer = 0;
+
+let keys = {};
+let dragging = false;
+
+// 별 생성
+function createStars() {
+  stars = [];
+
+  for (let i = 0; i < 90; i++) {
+    stars.push({
+      x: Math.random() * W,
+      y: Math.random() * H,
+      size: Math.random() * 2 + 0.5,
+      speed: Math.random() * 35 + 15
+    });
+  }
+}
+
+// 우주선
+function createShip() {
+  ship = {
+    x: W / 2,
+    y: H - 90,
+    width: 42,
+    height: 50,
+    speed: 420,
+    invincible: 0
+  };
+}
+
+// 게임 초기화
+function startGame() {
+  createShip();
+
+  meteors = [];
+
+  score = 0;
+  lives = 3;
+
+  spawnTimer = 0;
+  gameOver = false;
+  running = true;
+
+  keys = {};
+
+  startTime = performance.now();
+  lastTime = startTime;
+
+  scoreText.textContent = "0";
+  livesText.textContent = "3";
+
+  createStars();
+
+  overlay.classList.add("hidden");
+
+  requestAnimationFrame(gameLoop);
+}
+
+// 별 그리기
+function drawStars(dt) {
+  ctx.fillStyle = "white";
+
+  stars.forEach(star => {
+    star.y += star.speed * dt;
+
+    if (star.y > H) {
+      star.y = 0;
+      star.x = Math.random() * W;
+    }
+
+    ctx.globalAlpha = 0.3 + Math.random() * 0.5;
+
+    ctx.beginPath();
+    ctx.arc(star.x, star.y, star.size, 0, Math.PI * 2);
+    ctx.fill();
+  });
+
+  ctx.globalAlpha = 1;
+}
+
+// 우주선 그리기
+function drawShip() {
+  ctx.save();
+
+  ctx.translate(ship.x, ship.y);
+
+  // 엔진 불꽃
+  ctx.fillStyle = "#ff9f43";
+
+  ctx.beginPath();
+  ctx.moveTo(-9, 17);
+  ctx.lineTo(0, 35 + Math.random() * 10);
+  ctx.lineTo(9, 17);
+  ctx.fill();
+
+  // 우주선 몸체
+  ctx.fillStyle = "#dce7ff";
+
+  ctx.beginPath();
+  ctx.moveTo(0, -25);
+  ctx.lineTo(21, 20);
+  ctx.lineTo(0, 12);
+  ctx.lineTo(-21, 20);
+  ctx.closePath();
+  ctx.fill();
+
+  // 조종석
+  ctx.fillStyle = "#47d9ff";
+
+  ctx.beginPath();
+  ctx.ellipse(0, -4, 7, 11, 0, 0, Math.PI * 2);
+  ctx.fill();
+
+  // 날개
+  ctx.fillStyle = "#6477ff";
+
+  ctx.fillRect(-22, 12, 12, 8);
+  ctx.fillRect(10, 12, 12, 8);
+
+  ctx.restore();
+}
+
+// 운석 생성
+function createMeteor() {
+  const radius = Math.random() * 17 + 13;
+
+  meteors.push({
+    x: Math.random() * (W - radius * 2) + radius,
+    y: -radius,
+    radius: radius,
+    speed: 180 + Math.random() * 100 + score * 3,
+    rotation: Math.random() * Math.PI,
+    rotationSpeed: Math.random() * 3 - 1.5
+  });
+}
+
+// 운석 그리기
+function drawMeteor(meteor) {
+  ctx.save();
+
+  ctx.translate(meteor.x, meteor.y);
+  ctx.rotate(meteor.rotation);
+
+  ctx.fillStyle = "#8b6658";
+
+  ctx.beginPath();
+
+  for (let i = 0; i < 10; i++) {
+    const angle = (Math.PI * 2 / 10) * i;
+    const r = meteor.radius * (i % 2 === 0 ? 1 : 0.78);
+
+    const x = Math.cos(angle) * r;
+    const y = Math.sin(angle) * r;
+
+    if (i === 0) ctx.moveTo(x, y);
+    else ctx.lineTo(x, y);
+  }
+
+  ctx.closePath();
+  ctx.fill();
+
+  // 운석 표면 무늬
+  ctx.fillStyle = "#63463e";
+
+  ctx.beginPath();
+  ctx.arc(-5, -3, meteor.radius * 0.22, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.beginPath();
+  ctx.arc(7, 6, meteor.radius * 0.15, 0, Math.PI * 2);
+  ctx.fill();
+
+  ctx.restore();
+}
+
+// 충돌 검사
+function checkCollision(meteor) {
+  const dx = meteor.x - ship.x;
+  const dy = meteor.y - ship.y;
+
+  const distance = Math.sqrt(dx * dx + dy * dy);
+
+  return distance < meteor.radius + 18;
+}
+
+// 게임 오버
+function endGame() {
+  running = false;
+  gameOver = true;
+
+  title.textContent = "💥 게임 오버!";
+  
+  description.innerHTML =
+    "최종 생존 시간<br>" +
+    "<strong style='font-size:32px;color:#7ce7ff'>" +
+    score + "초</strong><br><br>" +
+    "운석을 피하지 못했습니다!<br>다시 도전해 보세요.";
+
+  startBtn.textContent = "다시 시작";
+
+  overlay.classList.remove("hidden");
+}
+
+// 게임 업데이트
+function update(dt) {
+  if (!running) return;
+
+  score = Math.floor((performance.now() - startTime) / 1000);
+  scoreText.textContent = score;
+
+  // 시간이 지날수록 우주선 이동
+  if (keys["ArrowLeft"] || keys["a"]) {
+    ship.x -= ship.speed * dt;
+  }
+
+  if (keys["ArrowRight"] || keys["d"]) {
+    ship.x += ship.speed * dt;
+  }
+
+  ship.x = Math.max(25, Math.min(W - 25, ship.x));
+
+  if (ship.invincible > 0) {
+    ship.invincible -= dt;
+  }
+
+  // 운석 생성: 시간이 지날수록 간격 감소
+  spawnTimer += dt;
+
+  const spawnInterval = Math.max(0.22, 0.9 - score * 0.012);
+
+  if (spawnTimer >= spawnInterval) {
+    spawnTimer = 0;
+    createMeteor();
+  }
+
+  // 운석 이동 및 충돌
+  for (let i = meteors.length - 1; i >= 0; i--) {
+    const meteor = meteors[i];
+
+    meteor.y += meteor.speed * dt;
+    meteor.rotation += meteor.rotationSpeed * dt;
+
+    if (meteor.y - meteor.radius > H) {
+      meteors.splice(i, 1);
+      continue;
+    }
+
+    if (ship.invincible <= 0 && checkCollision(meteor)) {
+
+      meteors.splice(i, 1);
+
+      lives--;
+      livesText.textContent = lives;
+
+      ship.invincible = 1.2;
+
+      if (lives <= 0) {
+        endGame();
+        return;
+      }
+    }
+  }
+}
+
+// 화면 그리기
+function draw(dt) {
+  ctx.clearRect(0, 0, W, H);
+
+  drawStars(dt);
+
+  meteors.forEach(drawMeteor);
+
+  // 피격 직후 잠깐 깜빡이는 효과
+  if (ship.invincible <= 0 ||
+      Math.floor(performance.now() / 100) % 2 === 0) {
+    drawShip();
+  }
+}
+
+// 게임 반복
+function gameLoop(timestamp) {
+  if (!running) return;
+
+  const dt = Math.min((timestamp - lastTime) / 1000, 0.04);
+  lastTime = timestamp;
+
+  update(dt);
+  draw(dt);
+
+  if (running) {
+    requestAnimationFrame(gameLoop);
+  }
+}
+
+// 키보드 조작
+window.addEventListener("keydown", (e) => {
+  if (
+    ["ArrowLeft", "ArrowRight", " "].includes(e.key)
+  ) {
+    e.preventDefault();
+  }
+
+  keys[e.key] = true;
+});
+
+window.addEventListener("keyup", (e) => {
+  keys[e.key] = false;
+});
+
+// 모바일 터치 및 마우스 드래그
+function moveShip(clientX) {
+  if (!running) return;
+
+  const rect = canvas.getBoundingClientRect();
+
+  ship.x = clientX - rect.left;
+  ship.x = Math.max(25, Math.min(W - 25, ship.x));
+}
+
+canvas.addEventListener("pointerdown", (e) => {
+  if (!running) return;
+
+  dragging = true;
+  moveShip(e.clientX);
+});
+
+canvas.addEventListener("pointermove", (e) => {
+  if (!dragging || !running) return;
+
+  moveShip(e.clientX);
+});
+
+window.addEventListener("pointerup", () => {
+  dragging = false;
+});
+
+window.addEventListener("pointercancel", () => {
+  dragging = false;
+});
+
+// 시작 버튼
+startBtn.addEventListener("click", startGame);
+
+// 처음 별 배경 표시
+createStars();
+draw(0);
+
+</script>
+
+</body>
+</html>
