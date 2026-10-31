@@ -1,0 +1,422 @@
+
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>나만의 메모리 게임</title>
+
+<style>
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: #f1f3f9;
+  font-family: Arial, sans-serif;
+  color: #333;
+  text-align: center;
+}
+
+.container {
+  max-width: 500px;
+  margin: auto;
+  padding: 25px 15px;
+}
+
+h1 {
+  font-size: 28px;
+  margin-bottom: 8px;
+}
+
+.subtitle {
+  color: #777;
+  font-size: 14px;
+  margin-bottom: 22px;
+}
+
+.stats {
+  display: flex;
+  justify-content: space-around;
+  background: white;
+  border-radius: 15px;
+  padding: 15px 5px;
+  margin-bottom: 20px;
+  box-shadow: 0 3px 10px #0000000d;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.stat-label {
+  color: #888;
+  font-size: 13px;
+}
+
+.stat-value {
+  font-size: 21px;
+  font-weight: bold;
+  color: #5555c9;
+}
+
+.board {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+  perspective: 1000px;
+}
+
+.card {
+  aspect-ratio: 1 / 1;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.card-inner {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  transition: transform 0.5s;
+}
+
+.card.flipped .card-inner,
+.card.matched .card-inner {
+  transform: rotateY(180deg);
+}
+
+.card-front,
+.card-back {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 13px;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+}
+
+.card-front {
+  background: #6262d5;
+  color: white;
+  font-size: 30px;
+  font-weight: bold;
+  box-shadow: 0 3px 7px #00000018;
+}
+
+.card-back {
+  background: white;
+  transform: rotateY(180deg);
+  font-size: clamp(28px, 9vw, 46px);
+  box-shadow: 0 3px 7px #00000010;
+}
+
+.card.matched .card-back {
+  background: #d9f7e5;
+  border: 2px solid #53c987;
+}
+
+#message {
+  min-height: 30px;
+  margin-top: 22px;
+  font-size: 17px;
+  font-weight: bold;
+  color: #5555c9;
+}
+
+button {
+  margin-top: 15px;
+  padding: 14px 30px;
+  border: none;
+  border-radius: 30px;
+  background: #6262d5;
+  color: white;
+  font-size: 17px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+button:active {
+  transform: scale(0.96);
+}
+
+@media (max-width: 360px) {
+  .board {
+    gap: 7px;
+  }
+
+  .card-front {
+    font-size: 25px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+  <h1>🧠 나만의 메모리 게임</h1>
+
+  <div class="subtitle">
+    같은 그림 2장을 찾아 모든 짝을 맞춰보세요!
+  </div>
+
+  <!-- 점수판 -->
+  <div class="stats">
+
+    <div class="stat">
+      <span class="stat-label">뒤집은 횟수</span>
+      <span class="stat-value" id="moves">0</span>
+    </div>
+
+    <div class="stat">
+      <span class="stat-label">찾은 짝</span>
+      <span class="stat-value" id="pairs">0 / 8</span>
+    </div>
+
+    <div class="stat">
+      <span class="stat-label">걸린 시간</span>
+      <span class="stat-value" id="time">0초</span>
+    </div>
+
+  </div>
+
+  <!-- 카드판 -->
+  <div class="board" id="board"></div>
+
+  <div id="message">
+    카드를 눌러 게임을 시작하세요!
+  </div>
+
+  <button id="restart">🔄 다시 시작</button>
+
+</div>
+
+<script>
+
+// 카드 그림 8종류
+const pictures = [
+  { emoji: "🎹", name: "피아노" },
+  { emoji: "🎸", name: "기타" },
+  { emoji: "⚾", name: "야구" },
+  { emoji: "📷", name: "카메라" },
+  { emoji: "📚", name: "공부" },
+  { emoji: "🎤", name: "마이크" },
+  { emoji: "🍫", name: "초콜릿" },
+  { emoji: "⚽", name: "축구" }
+];
+
+const board = document.getElementById("board");
+const movesText = document.getElementById("moves");
+const pairsText = document.getElementById("pairs");
+const timeText = document.getElementById("time");
+const message = document.getElementById("message");
+const restartBtn = document.getElementById("restart");
+
+let firstCard = null;
+let secondCard = null;
+
+let moves = 0;
+let matchedPairs = 0;
+
+let lockBoard = false;
+let gameStarted = false;
+let gameFinished = false;
+
+let startTime = 0;
+let timerInterval = null;
+
+// 카드 섞기
+function shuffle(array) {
+  for (let i = array.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [array[i], array[j]] = [array[j], array[i]];
+  }
+  return array;
+}
+
+// 게임 생성
+function createGame() {
+
+  clearInterval(timerInterval);
+
+  board.innerHTML = "";
+
+  firstCard = null;
+  secondCard = null;
+
+  moves = 0;
+  matchedPairs = 0;
+
+  lockBoard = false;
+  gameStarted = false;
+  gameFinished = false;
+
+  movesText.textContent = "0";
+  pairsText.textContent = "0 / 8";
+  timeText.textContent = "0초";
+
+  message.textContent = "카드를 눌러 게임을 시작하세요!";
+
+  // 그림을 각각 2장씩 복사하고 섞기
+  const cards = shuffle([...pictures, ...pictures]);
+
+  cards.forEach((picture) => {
+
+    const card = document.createElement("div");
+
+    card.className = "card";
+    card.dataset.name = picture.name;
+
+    card.innerHTML = `
+      <div class="card-inner">
+        <div class="card-front">?</div>
+        <div class="card-back" aria-label="${picture.name}">
+          ${picture.emoji}
+        </div>
+      </div>
+    `;
+
+    card.addEventListener("click", () => {
+      flipCard(card);
+    });
+
+    board.appendChild(card);
+
+  });
+}
+
+// 타이머 시작
+function startTimer() {
+
+  if (gameStarted) return;
+
+  gameStarted = true;
+  startTime = Date.now();
+
+  timerInterval = setInterval(() => {
+
+    const elapsed = Math.floor(
+      (Date.now() - startTime) / 1000
+    );
+
+    timeText.textContent = elapsed + "초";
+
+  }, 250);
+}
+
+// 카드 뒤집기
+function flipCard(card) {
+
+  if (lockBoard) return;
+  if (gameFinished) return;
+  if (card === firstCard) return;
+  if (card.classList.contains("flipped")) return;
+  if (card.classList.contains("matched")) return;
+
+  startTimer();
+
+  card.classList.add("flipped");
+
+  if (!firstCard) {
+
+    firstCard = card;
+    return;
+
+  }
+
+  secondCard = card;
+
+  moves++;
+  movesText.textContent = moves;
+
+  checkMatch();
+}
+
+// 같은 그림인지 확인
+function checkMatch() {
+
+  const isMatch =
+    firstCard.dataset.name === secondCard.dataset.name;
+
+  if (isMatch) {
+
+    firstCard.classList.add("matched");
+    secondCard.classList.add("matched");
+
+    matchedPairs++;
+
+    pairsText.textContent = matchedPairs + " / 8";
+
+    message.textContent = "정답입니다! 🎉";
+
+    resetCards();
+
+    if (matchedPairs === 8) {
+      finishGame();
+    }
+
+  } else {
+
+    lockBoard = true;
+
+    message.textContent = "아쉽네요! 다시 찾아보세요.";
+
+    setTimeout(() => {
+
+      firstCard.classList.remove("flipped");
+      secondCard.classList.remove("flipped");
+
+      resetCards();
+
+      message.textContent = "계속 찾아보세요! 💪";
+
+    }, 900);
+
+  }
+}
+
+// 선택 카드 초기화
+function resetCards() {
+
+  firstCard = null;
+  secondCard = null;
+
+  lockBoard = false;
+
+}
+
+// 게임 종료
+function finishGame() {
+
+  gameFinished = true;
+
+  clearInterval(timerInterval);
+
+  const totalTime = Math.floor(
+    (Date.now() - startTime) / 1000
+  );
+
+  timeText.textContent = totalTime + "초";
+
+  message.textContent =
+    "🏆 성공! 모든 짝을 찾았습니다!";
+
+}
+
+// 다시 시작
+restartBtn.addEventListener("click", createGame);
+
+// 처음 실행
+createGame();
+
+</script>
+
+</body>
+</html>
